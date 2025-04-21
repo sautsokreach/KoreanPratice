@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Excel Splitter</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+  <h2>Upload Excel File</h2>
+  <input type="file" id="fileInput">
+  <button id="processBtn">Process & Download</button>
+
+  <script>
+    let inputData = [];
+
+    // Read Excel file
+    $('#fileInput').on('change', function (e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        inputData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        console.log("File loaded! Click 'Process & Download'");
+      };
+
+      reader.readAsArrayBuffer(file);
+    });
+
+    // Process and download Excel
+    $('#processBtn').on('click', function () {
+  if (!inputData.length) {
+    alert("Please upload a file first.");
+    return;
+  }
+
+  const output = [["Korean 1", "English 1", "Korean 2", "English 2"]];
+
+  inputData.forEach(row => {
+    if (!row[0]) return;
+    const tokens = row[0].split(" ").filter(token => isNaN(token)); // Remove numbers
+
+    // Detect Korean (basic heuristic)
+    const isKorean = word => /[가-힣]/.test(word);
+
+    let korean1 = "";
+    let english1 = "";
+    let korean2 = "";
+    let english2 = "";
+
+    // Step 1: Korean 1
+    korean1 = tokens.shift();
+
+    // Step 2: English 1 — gather until next Korean
+    while (tokens.length && !isKorean(tokens[0])) {
+      english1 += (english1 ? " " : "") + tokens.shift();
+    }
+
+    // Step 3: Korean 2
+    if (tokens.length) {
+      korean2 = tokens.shift();
+    }
+
+    // Step 4: The rest is English 2
+    english2 = tokens.join(" ");
+
+    output.push([korean1, english1, korean2, english2]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(output);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Processed");
+  XLSX.writeFile(wb, "processed_output.xlsx");
+});
+  </script>
+</body>
+</html>
