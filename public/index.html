@@ -7,7 +7,7 @@
     <title>Korean Vocabulary Quiz</title>
     <!-- Include jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -152,9 +152,9 @@
     </style>
 </head>
 <body>
-    <!-- <h2>Upload Excel File</h2>
+    <h2>Upload Excel File</h2>
     <input type="file" id="fileInput">
-    <button id="processBtn">Process & Download</button> -->
+    <button id="processBtn">Process & Download</button>
 
 
     <h1>Korean Vocabulary Quiz</h1>
@@ -218,93 +218,97 @@
 
             let inputData = [];
 
-// Read Excel file
-// $('#fileInput').on('change', function (e) {
-//   const file = e.target.files[0];
-//   const reader = new FileReader();
 
-//   reader.onload = function (e) {
-//     const data = new Uint8Array(e.target.result);
-//     const workbook = XLSX.read(data, { type: 'array' });
-//     const sheetName = workbook.SheetNames[0];
-//     const sheet = workbook.Sheets[sheetName];
-//     inputData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-//     console.log("File loaded! Click 'Process & Download'");
-//   };
+$('#fileInput').on('change', function (e) {
+  const file = e.target.files[0];
+  const reader = new FileReader();
 
-//   reader.readAsArrayBuffer(file);
-// });
+  reader.onload = function (e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    inputData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    console.log("File loaded! Click 'Process & Download'");
+  };
 
-// $('#processBtn').on('click', function () {
-//   if (!inputData.length) {
-//     alert("Please upload a file first.");
-//     return;
-//   }
+  reader.readAsArrayBuffer(file);
+});
 
-//   const output = [];
+$('#processBtn').on('click', function () {
+  if (!inputData.length) {
+    alert("Please upload a file first.");
+    return;
+  }
 
-//   inputData.forEach(row => {
-//     if (!row[0]) return;
-//     const rawTokens = row[0].split(" ");
-//             const tokens = [];
+  const output = [];
 
-//             const test = word => /[가-힣]/.test(word);
+  inputData.forEach(row => {
+    if (!row[0]) return;
+    const rawTokens = row[0].split(" ");
+            const tokens = [];
 
-//             // Loop through all tokens
-//             for (let i = 0; i < rawTokens.length; i++) {
-//             const current = rawTokens[i];
-//             const next = rawTokens[i + 1];
+            const test = word => /[가-힣]/.test(word);
 
-//             // Skip if current is a number AND next is Korean
-//             if (!isNaN(current) && next && test(next)) {
-//                 continue; // skip this number
-//             }
+            // Loop through all tokens
+            for (let i = 0; i < rawTokens.length; i++) {
+            const current = rawTokens[i];
+            const next = rawTokens[i + 1];
 
-//             tokens.push(current);
-//             }
+            // Skip if current is a number AND next is Korean
+            if (!isNaN(current) && next && test(next)) {
+                continue; // skip this number
+            }
 
-//     // Detect Korean (basic heuristic)
-//     const isKorean = word => /[가-힣]/.test(word);
+            tokens.push(current);
+            }
 
-//     let korean1 = "";
-//     let english1 = "";
-//     let korean2 = "";
-//     let english2 = "";
+    // Detect Korean (basic heuristic)
+    const isKorean = word => /[가-힣]/.test(word);
 
-//     // Step 1: Korean 1
-//     korean1 = tokens.shift();
+    let korean1 = "";
+    let english1 = "";
+    let korean2 = "";
+    let english2 = "";
 
-//     // Step 2: English 1 — gather until next Korean
-//     while (tokens.length && !isKorean(tokens[0])) {
-//       english1 += (english1 ? " " : "") + tokens.shift();
-//     }
+    // Step 1: Korean 1
+    korean1 = tokens.shift();
 
-//     // Step 3: Korean 2
-//     if (tokens.length) {
-//       korean2 = tokens.shift();
-//     }
+    // Step 2: English 1 — gather until next Korean
+    while (tokens.length && !isKorean(tokens[0])) {
+      english1 += (english1 ? " " : "") + tokens.shift();
+    }
 
-//     // Step 4: The rest is English 2
-//     english2 = tokens.join(" ");
+    // Step 3: Korean 2
+    if (tokens.length) {
+      korean2 = tokens.shift();
+    }
 
-//     output.push({"korean":korean1,"english":english1});
-//     output.push({"korean":korean2,"english":english2});
-//   });
-//   $.ajax({
-//                     url: '/api/words/multi',
-//                     type: 'POST',
-//                     contentType: 'application/json',
-//                     data: JSON.stringify(output),
-//                     success: function(data) {
-//                         showMessage(`Word added successfully: ${korean} = ${english}`, 'success');
-//                         $('#add-word-form')[0].reset();
-//                     },
-//                     error: function(xhr) {
-//                         const errorMsg = xhr.responseJSON ? xhr.responseJSON.error : 'Failed to add word';
-//                         showMessage(errorMsg, 'error');
-//                     }
-//                 });
-// });
+    // Step 4: The rest is English 2
+    english2 = tokens.join(" ");
+    if(korean1 && english1){
+        output.push({"korean":korean1,"english":english1});
+    }
+    if(korean2 && english2){
+        output.push({"korean":korean2,"english":english2});
+    }
+
+  });
+  $.ajax({
+                    url: '/api/words/multi',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(output),
+                    success: function(data) {
+                        showMessage(`Word added successfully: ${korean} = ${english}`, 'success');
+                        $('#add-word-form')[0].reset();
+                    },
+                    error: function(xhr) {
+                        const errorMsg = xhr.responseJSON ? xhr.responseJSON.error : 'Failed to add word';
+                        showMessage(errorMsg, 'error');
+                    }
+                });
+});
 
 
             // Current quiz state

@@ -14,10 +14,10 @@ app.use(express.static('public'));
 
 // Set up PostgreSQL connection
 const pool = new Pool({
-  user: 'u1eddn8e19uuu1',
-  host: 'c8lj070d5ubs83.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com',
-  database: 'd5gune4c1018eh',
-  password: 'p135da798e3f3ed04233e4d409b8e09a3a6e3819544bf43638f1bd080b6a0de2c',
+  user: 'ue11ins90aicdo',
+  host: 'cd5gks8n4kb20g.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com',
+  database: 'dd480a9teqdfsp',
+  password: 'p3e8ce02ae0ac7f204852f07cf7e6d50fb9c859f53e57bac6f877b03448b496ae',
   port: 5432,
   ssl: {
     rejectUnauthorized: false,  // For local development or cloud services
