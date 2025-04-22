@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Korean Language Learning Exercises</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .tab-container {
+            margin-bottom: 20px;
+        }
+        .tab {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #e0e0e0;
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .exercise {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 0 4px 4px 4px;
+        }
+        .exercise.active {
+            display: block;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        /* Matching Pairs Styles */
+        #matchingExercise .card {
+            display: inline-block;
+            width: 150px;
+            height: 60px;
+            margin: 10px;
+            background-color: #f0f0f0;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            line-height: 60px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .card {
+                white-space: nowrap;      /* prevent text from wrapping to the next line */
+                overflow: hidden;         /* hide overflow text */
+                text-overflow: ellipsis;  /* show ... for overflowing text */
+        }
+        #matchingExercise .card.selected {
+            border-color: #4CAF50;
+            background-color: #e8f5e9;
+        }
+        #matchingExercise .card.matched {
+            border-color: #2196F3;
+            background-color: #e3f2fd;
+            cursor: default;
+        }
+        
+        /* Typing Practice Styles */
+        #typingExercise .prompt {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        #typingExercise input {
+            padding: 8px;
+            font-size: 16px;
+            width: 200px;
+        }
+        #typingExercise .feedback {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        
+        /* Memory Game Styles */
+        #memoryGameExercise .board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        #memoryGameExercise .memory-card {
+            height: 80px;
+            background-color: #2196F3;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.3s;
+        }
+        #memoryGameExercise .memory-card .card-content {
+            display: none;
+        }
+        #memoryGameExercise .memory-card.flipped {
+            transform: rotateY(180deg);
+            background-color: white;
+            color: #333;
+        }
+        #memoryGameExercise .memory-card.flipped .card-content {
+            display: block;
+            transform: rotateY(180deg);
+        }
+        #memoryGameExercise .memory-card.matched {
+            background-color: #e8f5e9;
+            border: 2px solid #4CAF50;
+            color: #333;
+        }
+        #memoryGameExercise .memory-card.matched .card-content {
+            display: block;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Korean Language Learning Exercises</h1>
+        
+        <div class="tab-container">
+            <div class="tab active" data-target="matchingExercise">Matching Pairs</div>
+            <div class="tab" data-target="typingExercise">Typing Practice</div>
+            <div class="tab" data-target="memoryGameExercise">Memory Game</div>
+        </div>
+        
+        <!-- Matching Pairs Exercise -->
+        <div id="matchingExercise" class="exercise active">
+            <h2>Match Korean Words with Their Translations</h2>
+            <p>Click on a card and then click on its matching pair. Try to match all pairs.</p>
+            <div id="matchingCards"></div>
+            <button id="resetMatching">Reset Exercise</button>
+            <div id="matchingResult" class="result"></div>
+        </div>
+        
+        <!-- Typing Practice Exercise -->
+        <div id="typingExercise" class="exercise">
+            <h2>Type the Korean Word</h2>
+            <div class="prompt">Type the Korean word for: <span id="wordPrompt"></span></div>
+            <input type="text" id="typingInput" placeholder="Type here...">
+            <button id="checkTyping">Check</button>
+            <button id="nextTyping">Next Word</button>
+            <div id="typingFeedback" class="feedback"></div>
+        </div>
+        
+        <!-- Memory Game Exercise -->
+        <div id="memoryGameExercise" class="exercise">
+            <h2>Memory Game</h2>
+            <p>Flip the cards and find matching pairs of Korean words and their translations.</p>
+            <div class="board" id="memoryBoard"></div>
+            <button id="resetMemory">Reset Game</button>
+            <div id="memoryResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Sample vocabulary data (you can replace this with your DB data)
+            const vocabulary = [
+            ];
+
+            $.ajax({
+                    url: `/api/random`,
+                    type: 'GET',
+                    success: function(result) {
+                        if (result.length > 0) {
+                            for(item of result){
+                                vocabulary.push({"id":item.id,"korean":item.korean,"english":item.english,"khmer":item.khmer})
+                            }
+                            // Initialize typing practice
+                            initTypingPractice();
+
+                            // Initialize matching game
+                            initMatchingGame();
+
+                            // Initialize memory game
+                            initMemoryGame();
+                        } else {
+                            $('#quiz-container').html('<p>Not enough words in the database to create a quiz. Please add more words first.</p>');
+                        }
+                    },
+                    error: function() {
+                        $('#quiz-container').html('<p>Error connecting to server</p>');
+                    }
+                });
+            
+            // Tab functionality
+            $('.tab').click(function() {
+                $('.tab').removeClass('active');
+                $(this).addClass('active');
+                
+                const target = $(this).data('target');
+                $('.exercise').removeClass('active');
+                $('#' + target).addClass('active');
+            });
+            
+            // =====================
+            // MATCHING PAIRS GAME
+            // =====================
+            let selectedCard = null;
+            let matchedPairs = 0;
+            const totalPairs = vocabulary.length;
+            
+            function initMatchingGame() {
+                matchedPairs = 0;
+                $('#matchingCards').empty();
+                $('#matchingResult').removeClass('success error').text('');
+                
+                // Create cards with Korean words
+                vocabulary.forEach(item => {
+                    $('#matchingCards').append(`<div class="card" data-id="${item.id}">${item.korean}</div>`);
+                });
+                
+                // Create cards with English translations (shuffled)
+                const shuffledVocab = [...vocabulary].sort(() => Math.random() - 0.5);
+                shuffledVocab.forEach(item => {
+                    $('#matchingCards').append(`<div class="card" data-id="${item.id}">${item.english}</div>`);
+                });
+                
+                // Shuffle all cards
+                const cards = $('#matchingCards .card').toArray();
+                for (let i = cards.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    cards[i].parentNode.insertBefore(cards[j], cards[i]);
+                }
+            }
+            
+            $('#matchingCards').on('click', '.card', function() {
+                // Ignore if card is already matched
+                if ($(this).hasClass('matched')) {
+                    return;
+                }
+                
+                if (!selectedCard) {
+                    // First card selection
+                    $(this).addClass('selected');
+                    selectedCard = $(this);
+                } else {
+                    // Second card selection
+                    const currentId = $(this).data('id');
+                    const selectedId = selectedCard.data('id');
+                    
+                    if (currentId === selectedId && !$(this).is(selectedCard)) {
+                        // Match found
+                        $(this).addClass('matched');
+                        selectedCard.addClass('matched').removeClass('selected');
+                        selectedCard = null;
+                        matchedPairs++;
+                        
+                        // Check if all pairs are matched
+                        if (matchedPairs === totalPairs) {
+                            $('#matchingResult').addClass('success').text('Congratulations! You matched all pairs!');
+                        }
+                    } else {
+                        // No match
+                        const current = $(this);
+                        current.addClass('selected');
+                        
+                        setTimeout(function() {
+                            current.removeClass('selected');
+                            selectedCard.removeClass('selected');
+                            selectedCard = null;
+                        }, 1000);
+                    }
+                }
+            });
+            
+            $('#resetMatching').click(function() {
+                initMatchingGame();
+            });
+        
+            
+            // =====================
+            // TYPING PRACTICE
+            // =====================
+            let currentTypingWord = null;
+            
+            function initTypingPractice() {
+                $('#typingInput').val('');
+                $('#typingFeedback').text('');
+                
+                // Select a random word
+                const randomIndex = Math.floor(Math.random() * vocabulary.length);
+                currentTypingWord = vocabulary[randomIndex];
+                
+                // Display the prompt
+                $('#wordPrompt').text(currentTypingWord.english);
+            }
+            
+            $('#checkTyping').click(function() {
+                const userInput = $('#typingInput').val().trim();
+                
+                if (userInput === currentTypingWord.korean) {
+                    $('#typingFeedback').removeClass('error').addClass('success')
+                        .text('Correct! The Korean word for "' + currentTypingWord.english + '" is "' + currentTypingWord.korean + '"');
+                } else {
+                    $('#typingFeedback').removeClass('success').addClass('error')
+                        .text('Not quite! The correct answer is "' + currentTypingWord.korean + '"');
+                }
+            });
+            
+            $('#nextTyping').click(function() {
+                initTypingPractice();
+            });
+            
+
+            // =====================
+            // MEMORY GAME
+            // =====================
+            let flippedCards = [];
+            let matchedCards = 0;
+            let isProcessing = false;
+            
+            function initMemoryGame() {
+                $('#memoryBoard').empty();
+                $('#memoryResult').removeClass('success error').text('');
+                matchedCards = 0;
+                flippedCards = [];
+                
+                // Create an array with Korean words and their translations
+                const cards = [];
+                vocabulary.forEach(item => {
+                    cards.push({ id: item.id, content: item.korean, type: 'korean' });
+                    cards.push({ id: item.id, content: item.english, type: 'english' });
+                });
+                
+                // Shuffle cards
+                const shuffledCards = [...cards].sort(() => Math.random() - 0.5);
+                
+                // Create the board
+                shuffledCards.forEach((card, index) => {
+                    $('#memoryBoard').append(`
+                        <div class="memory-card" data-id="${card.id}" data-type="${card.type}" data-index="${index}">
+                            <div class="card-content">${card.content}</div>
+                        </div>
+                    `);
+                });
+            }
+            
+            $('#memoryBoard').on('click', '.memory-card', function() {
+                // Ignore if card is already flipped or we're processing other cards
+                if ($(this).hasClass('flipped') || $(this).hasClass('matched') || isProcessing || flippedCards.length >= 2) {
+                    return;
+                }
+                
+                // Flip the card
+                $(this).addClass('flipped');
+                flippedCards.push($(this));
+                
+                // Check for a match if we have two flipped cards
+                if (flippedCards.length === 2) {
+                    isProcessing = true;
+                    
+                    const card1 = flippedCards[0];
+                    const card2 = flippedCards[1];
+                    
+                    if (card1.data('id') === card2.data('id') && card1.data('type') !== card2.data('type')) {
+                        // Match found
+                        setTimeout(function() {
+                            card1.removeClass('flipped').addClass('matched');
+                            card2.removeClass('flipped').addClass('matched');
+                            flippedCards = [];
+                            isProcessing = false;
+                            matchedCards += 2;
+                            
+                            // Check if all cards are matched
+                            if (matchedCards === vocabulary.length * 2) {
+                                $('#memoryResult').addClass('success').text('Congratulations! You found all matching pairs!');
+                            }
+                        }, 1000);
+                    } else {
+                        // No match
+                        setTimeout(function() {
+                            card1.removeClass('flipped');
+                            card2.removeClass('flipped');
+                            flippedCards = [];
+                            isProcessing = false;
+                        }, 1500);
+                    }
+                }
+            });
+            
+            $('#resetMemory').click(function() {
+                initMemoryGame();
+            });
+            
+
+        });
+    </script>
+</body>
+</html>

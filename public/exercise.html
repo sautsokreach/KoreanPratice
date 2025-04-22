@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Korean Vocabulary Practice</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f7;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .panel {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .flashcard {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            perspective: 1000px;
+        }
+        .card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .card-front {
+            background-color: #e4f1fe;
+            border: 2px solid #a6c9e2;
+        }
+        .card-back {
+            background-color: #e8f8f5;
+            border: 2px solid #a3e4d7;
+            transform: rotateY(180deg);
+        }
+        .word {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .language {
+            font-size: 14px;
+            color: #666;
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .progress {
+            height: 100%;
+            background-color: #4CAF50;
+            border-radius: 5px;
+            width: 0%;
+        }
+        button {
+            background-color: #4a69bd;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #1e3799;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .stat {
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            min-width: 100px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .hidden {
+            display: none;
+        }
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .option {
+            background-color: white;
+            border: 2px solid #ddd;
+            padding: 15px;
+            margin: 5px;
+            border-radius: 5px;
+            width: 45%;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .option:hover {
+            background-color: #f0f0f0;
+        }
+        .correct {
+            border-color: #4CAF50;
+            background-color: #e8f5e9;
+        }
+        .incorrect {
+            border-color: #f44336;
+            background-color: #ffebee;
+        }
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .mode-button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #ddd;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .mode-button.active {
+            background-color: #4a69bd;
+            color: white;
+        }
+        #reset-stats {
+            background-color: #f44336;
+        }
+        #reset-stats:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <h1>Korean Vocabulary Practice</h1>
+    
+    <div class="mode-selector">
+        <button class="mode-button active" data-mode="flashcard">Flashcards</button>
+        <button class="mode-button" data-mode="quiz">Multiple Choice</button>
+    </div>
+    
+    <div class="panel stats">
+        <div class="stat">
+            <div id="correct-count">0</div>
+            <div>Correct</div>
+        </div>
+        <div class="stat">
+            <div id="total-count">0</div>
+            <div>Total</div>
+        </div>
+        <div class="stat">
+            <div id="accuracy">0%</div>
+            <div>Accuracy</div>
+        </div>
+    </div>
+    
+    <div class="progress-bar">
+        <div class="progress"></div>
+    </div>
+    
+    <!-- Flashcard Mode -->
+    <div id="flashcard-mode">
+        <div class="panel flashcard">
+            <div class="card">
+                <div class="card-face card-front">
+                    <div class="word" id="front-word">안녕하세요</div>
+                    <div class="language" id="front-language">Korean</div>
+                </div>
+                <div class="card-face card-back">
+                    <div class="word" id="back-word">Hello</div>
+                    <div class="language" id="back-language">English</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="prev-card">Previous</button>
+            <button id="flip-card">Flip Card</button>
+            <button id="next-card">Next</button>
+        </div>
+    </div>
+    
+    <!-- Quiz Mode -->
+    <div id="quiz-mode" class="hidden">
+        <div class="panel">
+            <div class="word" id="quiz-question">안녕하세요</div>
+            <div class="language" id="quiz-language">Korean</div>
+            
+            <div class="options" id="quiz-options">
+                <div class="option">Hello</div>
+                <div class="option">Thank you</div>
+                <div class="option">Good bye</div>
+                <div class="option">Yes</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="next-question">Next Question</button>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button id="toggle-direction">Switch Languages</button>
+        <button id="reset-stats">Reset Stats</button>
+    </div>
+
+    <script>
+
+   
+        // Sample data (replace this with actual data from your PostgreSQL database)
+        let vocabulary = [
+
+        ];
+
+        $.ajax({
+                    url: `/api/random?count=10`,
+                    type: 'GET',
+                    success: function(questions) {
+                        if (questions.length > 0) {
+                            for(item of questions){
+                                vocabulary.push({"korean":item.korean,"english":item.english,"khmer":item.khmer})
+                            }
+                            // Initialize
+                            updateCard();
+                            updateQuiz();
+                            updateStats();
+                        } else {
+                            $('#quiz-container').html('<p>Not enough words in the database to create a quiz. Please add more words first.</p>');
+                        }
+                    },
+                    error: function() {
+                        $('#quiz-container').html('<p>Error connecting to server</p>');
+                    }
+                });
+
+        let currentIndex = 0;
+        let correctCount = 0;
+        let totalCount = 0;
+        let showingKorean = true;  // true = show Korean on front, false = show English on front
+        let currentMode = "flashcard";
+
+        function updateCard() {
+            const item = vocabulary[currentIndex];
+            
+            if (showingKorean) {
+                $("#front-word").text(item.korean);
+                $("#front-language").text("Korean");
+                $("#back-word").text(item.english);
+                $("#back-language").text("English");
+            } else {
+                $("#front-word").text(item.english);
+                $("#front-language").text("English");
+                $("#back-word").text(item.korean);
+                $("#back-language").text("Korean");
+            }
+            
+            // Update progress bar
+            const progress = ((currentIndex + 1) / vocabulary.length) * 100;
+            $(".progress").css("width", progress + "%");
+            
+            // Reset card flip
+            $(".card").removeClass("flipped");
+        }
+
+        function generateQuizOptions(correctAnswer) {
+            let options = [correctAnswer];
+            
+            // Add three random incorrect options
+            while (options.length < 4) {
+                const randomIndex = Math.floor(Math.random() * vocabulary.length);
+                const randomOption = showingKorean ? vocabulary[randomIndex].english : vocabulary[randomIndex].korean;
+                
+                if (!options.includes(randomOption)) {
+                    options.push(randomOption);
+                }
+            }
+            
+            // Shuffle options
+            return options.sort(() => Math.random() - 0.5);
+        }
+
+        function updateQuiz() {
+            const item = vocabulary[currentIndex];
+            
+            if (showingKorean) {
+                $("#quiz-question").text(item.korean);
+                $("#quiz-language").text("Korean");
+                const options = generateQuizOptions(item.english);
+                
+                $("#quiz-options").html("");
+                options.forEach(option => {
+                    $("#quiz-options").append(`<div class="option">${option}</div>`);
+                });
+            } else {
+                $("#quiz-question").text(item.english);
+                $("#quiz-language").text("English");
+                const options = generateQuizOptions(item.korean);
+                
+                $("#quiz-options").html("");
+                options.forEach(option => {
+                    $("#quiz-options").append(`<div class="option">${option}</div>`);
+                });
+            }
+            
+            // Update progress bar
+            const progress = ((currentIndex + 1) / vocabulary.length) * 100;
+            $(".progress").css("width", progress + "%");
+            
+            // Reset option styling
+            $(".option").removeClass("correct incorrect");
+        }
+
+        function updateStats() {
+            $("#correct-count").text(correctCount);
+            $("#total-count").text(totalCount);
+            const accuracy = totalCount === 0 ? 0 : Math.round((correctCount / totalCount) * 100);
+            $("#accuracy").text(accuracy + "%");
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            if (mode === "flashcard") {
+                $("#flashcard-mode").removeClass("hidden");
+                $("#quiz-mode").addClass("hidden");
+                updateCard();
+            } else {
+                $("#flashcard-mode").addClass("hidden");
+                $("#quiz-mode").removeClass("hidden");
+                updateQuiz();
+            }
+            
+            $(".mode-button").removeClass("active");
+            $(`.mode-button[data-mode="${mode}"]`).addClass("active");
+        }
+
+
+
+        // Event Handlers
+        $("#flip-card").click(function() {
+            $(".card").toggleClass("flipped");
+        });
+
+        $(".flashcard").click(function() {
+            $(".card").toggleClass("flipped");
+        });
+
+        $("#next-card").click(function() {
+            currentIndex = (currentIndex + 1) % vocabulary.length;
+            updateCard();
+        });
+
+        $("#prev-card").click(function() {
+            currentIndex = (currentIndex - 1 + vocabulary.length) % vocabulary.length;
+            updateCard();
+        });
+
+        $("#toggle-direction").click(function() {
+            showingKorean = !showingKorean;
+            if (currentMode === "flashcard") {
+                updateCard();
+            } else {
+                updateQuiz();
+            }
+        });
+
+        $("#quiz-options").on("click", ".option", function() {
+            const selectedOption = $(this).text();
+            const correctOption = showingKorean ? vocabulary[currentIndex].english : vocabulary[currentIndex].korean;
+            
+            totalCount++;
+            
+            if (selectedOption === correctOption) {
+                $(this).addClass("correct");
+                correctCount++;
+            } else {
+                $(this).addClass("incorrect");
+                // Highlight the correct answer
+                $(".option").each(function() {
+                    if ($(this).text() === correctOption) {
+                        $(this).addClass("correct");
+                    }
+                });
+            }
+            
+            updateStats();
+            
+            // Disable all options after selection
+            $(".option").css("pointer-events", "none");
+        });
+
+        $("#next-question").click(function() {
+            currentIndex = (currentIndex + 1) % vocabulary.length;
+            updateQuiz();
+            $(".option").css("pointer-events", "auto");
+        });
+
+        $("#reset-stats").click(function() {
+            correctCount = 0;
+            totalCount = 0;
+            updateStats();
+        });
+
+        $(".mode-button").click(function() {
+            const mode = $(this).data("mode");
+            switchMode(mode);
+        });
+    </script>
+</body>
+</html>
