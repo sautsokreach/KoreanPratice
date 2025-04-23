@@ -132,7 +132,7 @@ app.post('/api/words', async (req, res) => {
     
     // Insert the new word
     const insertResult = await pool.query(
-      'INSERT INTO words (korean, english) VALUES ($1, $2,$3) RETURNING id',
+      'INSERT INTO words (korean, english,khmer) VALUES ($1, $2,$3) RETURNING id',
       [korean, english,khmer]
     );
     
