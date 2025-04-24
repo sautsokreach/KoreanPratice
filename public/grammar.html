@@ -181,7 +181,7 @@
     let questions = []
     function loadQuestion(index) {
         const question = questions[index];
-        $('#category').text(question.category);
+        $('#category').text(question.category).hide();
 
         // Highlight blank in question
         const parts = question.question.split(question.blank);
@@ -243,6 +243,7 @@
     }
 
     function showFeedback(isCorrect) {
+        $('#category').show();
         const currentQuestion = questions[currentQuestionIndex];
         $('#feedback')
             .html(isCorrect
