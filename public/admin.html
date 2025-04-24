@@ -335,30 +335,30 @@
 
             // Setup editable cells
             function setupEditableCells() {
-                $('.editable-cell').dblclick(function() {
-                    const cell = $(this);
-                    const currentValue = cell.text();
-                    const field = cell.data('field');
-                    const row = cell.parent();
-                    const id = row.data('id');
-                    
-                    // Create input element
-                    const input = $(`<input type="text" class="cell-edit-input" value="${currentValue}">`);
-                    cell.html(input);
-                    input.focus();
-                    
-                    // Handle blur (clicking outside)
-                    input.blur(function() {
-                        finishEditing(cell, input, id, field);
-                    });
-                    
-                    // Handle enter key
-                    input.keypress(function(e) {
-                        if (e.which === 13) { // Enter key
+                    $('.editable-cell').dblclick(function() {
+                        const cell = $(this);
+                        const currentValue = cell.text();
+                        const field = cell.data('field');
+                        const row = cell.parent();
+                        const id = row.data('id');
+                        
+                        // Create input element
+                        const input = $(`<input type="text" class="cell-edit-input" value="${currentValue}">`);
+                        cell.html(input);
+                        input.focus();
+                        
+                        // Handle blur (clicking outside)
+                        input.blur(function() {
                             finishEditing(cell, input, id, field);
-                        }
+                        });
+                        
+                        // Handle enter key
+                        input.keypress(function(e) {
+                            if (e.which === 13) { // Enter key
+                                finishEditing(cell, input, id, field);
+                            }
+                        });
                     });
-                });
             }
             
             // Finish editing and save changes

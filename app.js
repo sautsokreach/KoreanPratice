@@ -260,7 +260,7 @@ app.get('/api/random', async (req, res) => {
 });
 
 // Serve the main application page
-app.get('/', (req, res) => {
+app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
@@ -268,6 +268,10 @@ app.get('/exercise', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'exercise.html'));
 });
 app.get('/exercise2', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'exercise2.html'));
+});
+
+app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'exercise2.html'));
 });
 
