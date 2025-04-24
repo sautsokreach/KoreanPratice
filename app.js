@@ -279,7 +279,7 @@ app.get('/api/randomgrammar', async (req, res) => {
 
 // Serve the main application page
 app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 app.get('/exercise', (req, res) => {
