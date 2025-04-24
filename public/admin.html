@@ -118,19 +118,22 @@
             background-color: #f8d7da;
             border-color: #dc3545;
         }
-        .word-list {
+        .word-list,.grammar-list {
             border-collapse: collapse;
             width: 100%;
         }
-        .word-list th, .word-list td {
+        .word-list th, .word-list td,.grammar-list th,.grammar-list td  {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
         }
-        .word-list th {
+        .word-list th,.grammar-list th {
             background-color: #f2f2f2;
         }
         .word-list tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .grammar-list tr:nth-child(even) {
             background-color: #f9f9f9;
         }
         .quiz-controls {
@@ -197,6 +200,7 @@
         <button class="tab active" data-tab="add-words">Add Words</button>
         <button class="tab" data-tab="quiz">Take Quiz</button>
         <button class="tab" data-tab="word-list">Word List</button>
+        <button class="tab" data-tab="grammar-list">Gramamr List</button>
     </div>
     
     <div id="add-words" class="tab-content container active">
@@ -249,6 +253,28 @@
                 </tr>
             </thead>
             <tbody id="words-table-body"></tbody>
+        </table>
+    </div>
+
+    <div id="grammar-list" class="tab-content container">
+        <h2>Grammar List</h2>
+        <p>All Korean-English Grammar pairs in the database. Double-click on any cell to edit.</p>
+        <div class="edit-controls">
+            <div>
+                <span id="save-indicator" class="save-indicator">✓ Changes saved!</span>
+            </div>
+        </div>
+        <table class="grammar-list">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Question</th>
+                    <th>Options</th>
+                    <th>Answer</th>
+                    <th>Explanation</th>
+                </tr>
+            </thead>
+            <tbody id="grammars-table-body"></tbody>
         </table>
     </div>
 
@@ -317,7 +343,7 @@
                         } else {
                             $.each(words, function(i, word) {
                                 $('#words-table-body').append(`
-                                    <tr data-id="${word.id}">
+                                    <tr data-id="${word.id}" data-type="word">
                                         <td class="editable-cell" data-field="korean">${word.korean}</td>
                                         <td class="editable-cell" data-field="english">${word.english}</td>
                                         <td class="editable-cell" data-field="khmer">${word.khmer || ''}</td>
@@ -332,6 +358,36 @@
                     }
                 });
             }
+            function loadGrammarList() {
+                $.ajax({
+                    url: '/api/grammars',
+                    type: 'GET',
+                    success: function(grammars) {
+                        grammarData = grammars; // Store the data
+                        $('#grammars-table-body').empty();
+                        
+                        if (grammars.length === 0) {
+                            $('#grammars-table-body').append('<tr><td colspan="3">No Grammar in database yet</td></tr>');
+                        } else {
+                            $.each(grammars, function(i, grammar) {
+                                $('#grammars-table-body').append(`
+                                    <tr data-id="${grammar.id}" data-type="grammar">
+                                        <td class="editable-cell" data-field="category">${grammar.category}</td>
+                                        <td class="editable-cell" data-field="question">${grammar.question}</td>
+                                        <td class="editable-cell" data-field="options">${grammar.options || ''}</td>
+                                        <td class="editable-cell" data-field="answer">${grammar.answer || ''}</td>
+                                        <td class="editable-cell" data-field="explanation">${grammar.explanation || ''}</td>
+                                    </tr>
+                                `);
+                            });
+                            setupEditableCells();
+                        }
+                    },
+                    error: function() {
+                        console.error('Error loading grammar list');
+                    }
+                });
+            }
 
             // Setup editable cells
             function setupEditableCells() {
@@ -341,6 +397,7 @@
                         const field = cell.data('field');
                         const row = cell.parent();
                         const id = row.data('id');
+                        const type = row.data('type');
                         
                         // Create input element
                         const input = $(`<input type="text" class="cell-edit-input" value="${currentValue}">`);
@@ -349,20 +406,20 @@
                         
                         // Handle blur (clicking outside)
                         input.blur(function() {
-                            finishEditing(cell, input, id, field);
+                            finishEditing(cell, input, id, field,type);
                         });
                         
                         // Handle enter key
                         input.keypress(function(e) {
                             if (e.which === 13) { // Enter key
-                                finishEditing(cell, input, id, field);
+                                finishEditing(cell, input, id, field,type);
                             }
                         });
                     });
             }
             
             // Finish editing and save changes
-            function finishEditing(cell, input, id, field) {
+            function finishEditing(cell, input, id, field,type) {
                 const newValue = input.val();
                 const originalValue = cell.data('original-value') || cell.text();
                 
@@ -375,7 +432,7 @@
                     updateData[field] = newValue;
                     
                     $.ajax({
-                        url: `/api/words/${id}`,
+                        url: `/api/${type=="word"?"words":"grammars"}/${id}`,
                         type: 'PUT',
                         contentType: 'application/json',
                         data: JSON.stringify(updateData),
@@ -647,6 +704,7 @@
             
             // Initial load of word list
             loadWordList();
+            loadGrammarList();
         });
     </script>
 </body>

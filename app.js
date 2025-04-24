@@ -81,6 +81,15 @@ app.get('/api/words', async (req, res) => {
   }
 });
 
+app.get('/api/grammars', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM grammar ORDER BY id');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Update a specific word by ID
 app.put('/api/words/:id', async (req, res) => {
   try {
@@ -97,6 +106,39 @@ app.put('/api/words/:id', async (req, res) => {
     
     const query = `
       UPDATE words 
+      SET ${setClause} 
+      WHERE id = $${values.length} 
+      RETURNING *`;
+    
+    const result = await pool.query(query, values);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Word not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error updating word:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update a specific word by ID
+app.put('/api/grammars/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    
+    // Build the SET part of the query dynamically based on provided fields
+    const fields = Object.keys(updates);
+    const setClause = fields.map((field, i) => `${field} = $${i + 1}`).join(', ');
+    const values = fields.map(field => updates[field]);
+    
+    // Add the ID as the last parameter
+    values.push(id);
+    
+    const query = `
+      UPDATE grammar 
       SET ${setClause} 
       WHERE id = $${values.length} 
       RETURNING *`;
