@@ -242,11 +242,29 @@ app.get('/api/quiz', async (req, res) => {
 
 
 // Generate quiz questions
-app.get('/api/random', async (req, res) => {
+app.get('/api/randomword', async (req, res) => {
   
   try {
     // Get random words for the quiz
     const wordsResult = await pool.query('SELECT * FROM words ORDER BY RANDOM() LIMIT $1', [20]);
+    const words = wordsResult.rows;
+    
+    if (words.length < 4) {
+      return res.status(400).json({ error: 'Not enough words in the database to create a quiz' });
+    }
+    
+    res.json(words);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Generate quiz questions
+app.get('/api/randomgrammar', async (req, res) => {
+  
+  try {
+    // Get random words for the quiz
+    const wordsResult = await pool.query('SELECT * FROM grammar ORDER BY RANDOM() LIMIT $1', [20]);
     const words = wordsResult.rows;
     
     if (words.length < 4) {
@@ -269,6 +287,10 @@ app.get('/exercise', (req, res) => {
 });
 app.get('/exercise2', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'exercise2.html'));
+});
+
+app.get('/grammar', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'grammar.html'));
 });
 
 app.get('/', (req, res) => {

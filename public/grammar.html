@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Korean Grammar Quiz</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .quiz-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #5a3b8c;
+            text-align: center;
+        }
+        .progress-container {
+            margin: 20px 0;
+        }
+        .progress-bar {
+            background-color: #eee;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress {
+            background-color: #5a3b8c;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .question-container {
+            margin: 20px 0;
+        }
+        .category {
+            color: #5a3b8c;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .question {
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+        .highlight {
+            color: #5a3b8c;
+            font-weight: bold;
+        }
+        .options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .option {
+            background-color: #f9f9f9;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .option:hover {
+            background-color: #f0f0f0;
+        }
+        .option.selected {
+            background-color: #e0e0ff;
+            border-color: #5a3b8c;
+        }
+        .option.correct {
+            background-color: #d4edda;
+            border-color: #28a745;
+        }
+        .option.incorrect {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+        }
+        .feedback {
+            background-color: #f0f0ff;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+        .feedback.correct {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .feedback.incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #5a3b8c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #4a2b7c;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .results {
+            text-align: center;
+            display: none;
+        }
+        .score {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+        .score span {
+            color: #5a3b8c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>Korean Grammar Quiz</h1>
+        
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress" id="progress"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+                <span id="current-question">Question 1/10</span>
+                <span id="score-display">Score: 0</span>
+            </div>
+        </div>
+        
+        <div id="quiz">
+            <div class="question-container">
+                <div class="category" id="category"></div>
+                <div class="question" id="question"></div>
+            </div>
+            
+            <div class="options" id="options"></div>
+            
+            <div class="feedback" id="feedback"></div>
+            
+            <div class="controls">
+                <button id="prev-btn" disabled>Previous</button>
+                <button id="next-btn" disabled>Next</button>
+            </div>
+        </div>
+        
+        <div class="results" id="results">
+            <h2>Quiz Complete!</h2>
+            <div class="score">Your score: <span id="final-score">0/10</span></div>
+            <button id="restart-btn">Restart Quiz</button>
+        </div>
+    </div>
+
+    <script>
+    
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let answeredQuestions = [];
+    let selectedOption = null;
+    let questions = []
+    function loadQuestion(index) {
+        const question = questions[index];
+        $('#category').text(question.category);
+
+        // Highlight blank in question
+        const parts = question.question.split(question.blank);
+        $('#question').html(parts[0] + '<span class="highlight">' + question.blank + '</span>' + parts[1]);
+
+        // Clear and populate options
+        $('#options').empty();
+        question.options.forEach(option => {
+            const $btn = $('<div class="option"></div>').text(option);
+            $btn.on('click', function () {
+                selectOption($(this), option);
+            });
+            $('#options').append($btn);
+        });
+
+        $('#feedback').hide();
+        $('#next-btn').prop('disabled', !answeredQuestions[index]);
+        $('#prev-btn').prop('disabled', index === 0);
+
+        if (answeredQuestions[index]) {
+            $('.option').each(function () {
+                if ($(this).text() === question.answer) {
+                    $(this).addClass('correct');
+                } else if ($(this).text() === selectedOption && selectedOption !== question.answer) {
+                    $(this).addClass('incorrect');
+                }
+            });
+
+            showFeedback(selectedOption === question.answer);
+        }
+
+        updateProgress();
+    }
+
+    function selectOption($optionElement, optionText) {
+        if (answeredQuestions[currentQuestionIndex]) return;
+
+        answeredQuestions[currentQuestionIndex] = true;
+        selectedOption = optionText;
+
+        const currentQuestion = questions[currentQuestionIndex];
+        const isCorrect = optionText === currentQuestion.answer;
+
+        if (isCorrect) {
+            score++;
+            $('#score-display').text(`Score: ${score}`);
+        }
+
+        $('.option').each(function () {
+            if ($(this).is($optionElement)) {
+                $(this).addClass('selected ' + (isCorrect ? 'correct' : 'incorrect'));
+            } else if ($(this).text() === currentQuestion.answer) {
+                $(this).addClass('correct');
+            }
+        });
+
+        showFeedback(isCorrect);
+        $('#next-btn').prop('disabled', false);
+    }
+
+    function showFeedback(isCorrect) {
+        const currentQuestion = questions[currentQuestionIndex];
+        $('#feedback')
+            .html(isCorrect
+                ? `<strong>Correct!</strong> ${currentQuestion.explanation}`
+                : `<strong>Incorrect.</strong> ${currentQuestion.explanation}`)
+            .removeClass('correct incorrect')
+            .addClass(isCorrect ? 'correct' : 'incorrect')
+            .show();
+    }
+
+    function updateProgress() {
+        const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+        $('#progress').css('width', progress + '%');
+        $('#current-question').text(`Question ${currentQuestionIndex + 1}/${questions.length}`);
+    }
+
+    function nextQuestion() {
+        if (currentQuestionIndex < questions.length - 1) {
+            currentQuestionIndex++;
+            loadQuestion(currentQuestionIndex);
+        } else {
+            showResults();
+        }
+    }
+
+    function prevQuestion() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            loadQuestion(currentQuestionIndex);
+        }
+    }
+
+    function showResults() {
+        $('#quiz').hide();
+        $('#results').show();
+        $('#final-score').text(`${score}/${questions.length}`);
+    }
+
+    function restartQuiz() {
+        currentQuestionIndex = 0;
+        score = 0;
+        answeredQuestions = Array(questions.length).fill(false);
+        selectedOption = null;
+        $('#score-display').text('Score: 0');
+        $('#quiz').show();
+        $('#results').hide();
+        loadQuestion(currentQuestionIndex);
+    }
+
+    // Setup on document ready
+    $(document).ready(function () {
+        $('#next-btn').on('click', nextQuestion);
+        $('#prev-btn').on('click', prevQuestion);
+        $('#restart-btn').on('click', restartQuiz);
+        $.ajax({
+                    url: `/api/randomgrammar`,
+                    type: 'GET',
+                    success: function(result) {
+                         questions = result;    
+                         currentQuestionIndex = 0;
+                         score = 0;
+                         answeredQuestions = Array(questions.length).fill(false);
+                         selectedOption = null;
+                         loadQuestion(currentQuestionIndex);
+                    },
+                    error: function() {
+                        $('#quiz-container').html('<p>Error connecting to server</p>');
+                    }
+                });
+       
+    });
+    </script>
+</body>
+</html>
