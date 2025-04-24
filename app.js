@@ -260,7 +260,7 @@ app.get('/api/random', async (req, res) => {
 });
 
 // Serve the main application page
-app.get('/sokreach', (req, res) => {
+app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
