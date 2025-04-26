@@ -273,7 +273,7 @@
 
                 // Append the shuffled Korean cards to the DOM
                 koreanCards.forEach(card => {
-                    $('#matchingCards').append(`<div class="card" data-id="${card.id}" data-type="korean"> data-meaning="${card.meaning}"${card.text} <div class="tooltip-text">${card.meaning}</div></div>`);
+                    $('#matchingCards').append(`<div class="card" data-id="${card.id}" data-type="korean" data-meaning="${card.meaning}">  ${card.text} <div class="tooltip-text">${card.meaning}</div></div>`);
                 });
 
                 // Append the shuffled English cards to the DOM
