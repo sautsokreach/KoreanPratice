@@ -81,6 +81,29 @@
                 overflow: hidden;         /* hide overflow text */
                 text-overflow: ellipsis;  /* show ... for overflowing text */
         }
+
+        .card .tooltip-text {
+            visibility: hidden;
+            width: 120px;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 6px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%; /* Position above the div */
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .card:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
         #matchingExercise .card.selected {
             border-color: #4CAF50;
             background-color: #e8f5e9;
@@ -161,6 +184,8 @@
             background-color: #ffebee;
             color: #c62828;
         }
+
+   
     </style>
 </head>
 <body>
@@ -257,7 +282,7 @@
 
                 // Create an array of Korean cards and English cards
                 let koreanCards = vocabulary.map(item => {
-                    return { type: 'korean', id: item.id, text: item.korean };
+                    return { type: 'korean', id: item.id, text: item.korean,meaning: item.english };
                 });
 
                 let englishCards = vocabulary.map(item => {
@@ -270,7 +295,7 @@
 
                 // Append the shuffled Korean cards to the DOM
                 koreanCards.forEach(card => {
-                    $('#matchingCards').append(`<div class="card" data-id="${card.id}" data-type="korean">${card.text}</div>`);
+                    $('#matchingCards').append(`<div class="card" data-id="${card.id}" data-type="korean">${card.text} <div class="tooltip-text">${card.meaning}</div></div>`);
                 });
 
                 // Append the shuffled English cards to the DOM
