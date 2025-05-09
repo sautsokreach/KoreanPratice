@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 
 // Set up middleware
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static('public'));
 
 // Set up PostgreSQL connection
@@ -201,7 +201,7 @@ app.post('/api/words/multi', async (req, res) => {
     
     try {
       // Check if Korean word already exists
-      const checkResult = await pool.query('SELECT * FROM words WHERE korean = $1', [korean]);
+      const checkResult = await pool.query('SELECT * FROM wordsV2 WHERE korean = $1', [korean]);
       
       if (checkResult.rows.length > 0) {
         continue; // skip when i is 5
@@ -209,7 +209,7 @@ app.post('/api/words/multi', async (req, res) => {
       
       // Insert the new word
       const insertResult = await pool.query(
-        'INSERT INTO words (korean, english) VALUES ($1, $2) RETURNING id',
+        'INSERT INTO wordsV2 (korean, english) VALUES ($1, $2) RETURNING id',
         [korean, english]
       );
       insertResult.rows[0].id;
