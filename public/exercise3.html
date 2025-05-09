@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Korean to English Vocabulary Game</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+  <!-- jQuery -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+  <style>
+    body {
+      background-color: #f8f9fa;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .game-container {
+      position: relative;
+      height: 700px;
+      border: 2px solid #0d6efd;
+      background-color: white;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .word-box {
+      position: absolute;
+      width: 200px;
+      height: 80px;
+      background-color: #0d6efd;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 28px;
+      font-weight: bold;
+      color: white;
+      left: 50%;
+      transform: translateX(-50%);
+      top: -100px;
+      animation: drop 12s linear forwards;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    @keyframes drop {
+      0% { top: -100px; }
+      100% { top: calc(100% + 100px); }
+    }
+    .paused {
+      animation-play-state: paused;
+    }
+    .answers-container {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+    .game-over {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      font-size: 30px;
+      font-weight: bold;
+      color: #0d6efd;
+    }
+    .final-score {
+      font-size: 48px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="text-center mb-4">
+          <h1 class="display-4">Korean to English Vocabulary Game</h1>
+        </div>
+        
+        <div class="d-flex justify-content-between mb-3">
+          <h3 class="score">Score: <span id="score">0</span></h3>
+          <h3 class="question-count">Question: <span id="question-count">0</span>/20</h3>
+        </div>
+        
+        <div class="game-container" id="game-container">
+          <div id="start-screen" class="game-over">
+            <p class="display-6">Learn Korean Vocabulary!</p>
+            <button class="btn btn-primary btn-lg" id="start-btn">Start Game</button>
+          </div>
+          
+          <div id="word-drop" class="d-none"></div>
+          <div id="answers-container" class="answers-container d-none"></div>
+          
+          <div id="game-over-screen" class="game-over d-none">
+            <p class="display-6">Game Over!</p>
+            <p>Your final score: <span class="final-score" id="final-score">0</span>/20</p>
+            <button class="btn btn-primary btn-lg" id="restart-btn">Play Again</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    $(document).ready(function() {
+      let wordPairs = [];
+      // Korean-English word pairs 
+                $.ajax({
+                    url: `/api/quiz?count=20`,
+                    type: 'GET',
+                    success: function(questions) {
+                        if (questions.length > 0) {
+                          wordPairs = questions
+                        } 
+                    },
+                    error: function() {
+                        $('#quiz-container').html('<p>Error connecting to server</p>');
+                    }
+                });
+
+
+
+      let score = 0;
+      let questionCount = 0;
+      let currentWordBox = null;
+      let currentWordPair = null;
+      let gameInProgress = false;
+      let shuffledWords = [];
+      let animationTimeout = null;
+
+      // Fisher-Yates shuffle algorithm
+      function shuffleArray(array) {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+      }
+
+      function startGame() {
+        score = 0;
+        questionCount = 0;
+        $('#score').text(score);
+        $('#question-count').text(questionCount);
+        
+        // Shuffle word pairs and take 20 (or less if we don't have 20)
+        shuffledWords = shuffleArray(wordPairs).slice(0, 20);
+        
+        $('#start-screen').addClass('d-none');
+        $('#word-drop').removeClass('d-none');
+        $('#answers-container').removeClass('d-none');
+        $('#game-over-screen').addClass('d-none');
+        
+        gameInProgress = true;
+        dropNextWord();
+      }
+
+      function dropNextWord() {
+        if (!gameInProgress) return;
+        
+        if (questionCount >= 20 || questionCount >= shuffledWords.length) {
+          endGame();
+          return;
+        }
+        
+        // Clear any existing word box
+        if (currentWordBox) {
+          $(currentWordBox).remove();
+        }
+        
+        // Create new word box
+        currentWordPair = shuffledWords[questionCount];
+        currentWordBox = $('<div>', {
+          class: 'word-box',
+          text: currentWordPair.korean
+        }).appendTo('#word-drop');
+        
+        // Create answer buttons
+        $('#answers-container').empty();
+        const shuffledOptions = shuffleArray(currentWordPair.options);
+        
+        shuffledOptions.forEach(option => {
+          $('<button>', {
+            class: 'btn btn-outline-primary m-2',
+            text: option,
+            click: function() {
+              checkAnswer(option);
+            }
+          }).appendTo('#answers-container');
+        });
+        
+        // Increment question count
+        questionCount++;
+        $('#question-count').text(questionCount);
+        
+        // Set timeout for word to drop fully (12 seconds based on animation)
+        animationTimeout = setTimeout(() => {
+          if (gameInProgress) {
+            // Word reached bottom without answer, move to next word
+            dropNextWord();
+          }
+        }, 12000);
+      }
+
+      function checkAnswer(selectedOption) {
+        if (!gameInProgress) return;
+        
+        // Clear the animation timeout
+        clearTimeout(animationTimeout);
+        
+        // Pause the animation
+        if (currentWordBox) {
+          $(currentWordBox).addClass('paused');
+        }
+        
+        // Handle the answer
+        const buttons = $('#answers-container button');
+        buttons.each(function() {
+          if ($(this).text() === selectedOption) {
+            if (selectedOption === currentWordPair.options[currentWordPair.correctIndex]) {
+              $(this).removeClass('btn-outline-primary').addClass('btn-success');
+              score++;
+              $('#score').text(score);
+            } else {
+              $(this).removeClass('btn-outline-primary').addClass('btn-danger');
+              // Highlight the correct answer
+              buttons.each(function() {
+                if ($(this).text() === currentWordPair.options[currentWordPair.correctIndex]) {
+                  $(this).removeClass('btn-outline-primary').addClass('btn-success');
+                }
+              });
+            }
+          }
+        });
+        
+        // Immediately proceed to next word
+        dropNextWord();
+      }
+
+      function endGame() {
+        gameInProgress = false;
+        $('#word-drop').empty();
+        $('#answers-container').empty();
+        
+        $('#word-drop').addClass('d-none');
+        $('#answers-container').addClass('d-none');
+        $('#game-over-screen').removeClass('d-none');
+        
+        $('#final-score').text(score);
+      }
+
+      $('#start-btn').on('click', startGame);
+      $('#restart-btn').on('click', startGame);
+    });
+  </script>
+</body>
+</html>

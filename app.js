@@ -331,6 +331,10 @@ app.get('/exercise2', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'exercise2.html'));
 });
 
+app.get('/exercise3', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'exercise3.html'));
+});
+
 app.get('/grammar', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'grammar.html'));
 });
