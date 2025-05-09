@@ -81,6 +81,7 @@
                 overflow: hidden;         /* hide overflow text */
                 text-overflow: ellipsis;  /* show ... for overflowing text */
         }
+
         #matchingExercise .card.selected {
             border-color: #4CAF50;
             background-color: #e8f5e9;
@@ -161,6 +162,8 @@
             background-color: #ffebee;
             color: #c62828;
         }
+
+   
     </style>
 </head>
 <body>
@@ -254,24 +257,29 @@
                 matchedPairs = 0;
                 $('#matchingCards').empty();
                 $('#matchingResult').removeClass('success error').text('');
-                
-                // Create cards with Korean words
-                vocabulary.forEach(item => {
-                    $('#matchingCards').append(`<div class="card" data-id="${item.id}">${item.korean}</div>`);
+
+                // Create an array of Korean cards and English cards
+                let koreanCards = vocabulary.map(item => {
+                    return { type: 'korean', id: item.id, text: item.korean,meaning: item.english };
                 });
-                
-                // Create cards with English translations (shuffled)
-                const shuffledVocab = [...vocabulary].sort(() => Math.random() - 0.5);
-                shuffledVocab.forEach(item => {
-                    $('#matchingCards').append(`<div class="card" data-id="${item.id}">${item.english}</div>`);
+
+                let englishCards = vocabulary.map(item => {
+                    return { type: 'english', id: item.id, text: item.english };
                 });
-                
-                // Shuffle all cards
-                const cards = $('#matchingCards .card').toArray();
-                for (let i = cards.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    cards[i].parentNode.insertBefore(cards[j], cards[i]);
-                }
+
+                // Shuffle Korean and English cards separately
+                koreanCards = koreanCards.sort(() => Math.random() - 0.5);
+                englishCards = englishCards.sort(() => Math.random() - 0.5);
+
+                // Append the shuffled Korean cards to the DOM
+                koreanCards.forEach(card => {
+                    $('#matchingCards').append(`<div class="card" data-id="${card.id}" data-type="korean" data-meaning="${card.meaning}">  ${card.text} <div class="tooltip-text">${card.meaning}</div></div>`);
+                });
+
+                // Append the shuffled English cards to the DOM
+                englishCards.forEach(card => {
+                    $('#matchingCards').append(`<div class="card" data-id="${card.id}" data-type="english">${card.text}</div>`);
+                });
             }
             
             $('#matchingCards').on('click', '.card', function() {
