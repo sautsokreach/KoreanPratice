@@ -14,17 +14,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static('public'));
 
-const wss = http.createServer(app);
+const server = http.createServer(app); // Attach Express to HTTP server
+const wss = new WebSocket.Server({ server }); // Attach WS to the same server
+
 wss.on('connection', (ws) => {
-  console.log('Client connected');
+  console.log('✅ WebSocket client connected');
   ws.on('message', (message) => {
-    console.log(`Received in server: ${message}`);
-    // Broadcast to all other clients
-    wss.clients.forEach((client) => {
-      if (client !== ws && client.readyState === WebSocket.OPEN) {
-        client.send(message);
-      }
-    });
+    console.log('📨 Received:', message);
+    ws.send(`Echo: ${message}`);
   });
 });
 // Set up PostgreSQL connection
