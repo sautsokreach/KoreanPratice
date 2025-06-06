@@ -2,12 +2,18 @@
 <html>
   <body>
     <script>
-      const socket = new WebSocket("wss://vocabexercise-9a88e0ac1aa5.herokuapp.com"); // same server IP
+      var HOST = location.origin.replace(/^http/, 'ws').replace("websocket","")
+      console.log("HOST",HOST)
+      var socket = new WebSocket("ws://localhost:8080");
 
       socket.onopen = () => {
         console.log("Connected");
         socket.send("Hello from Chrome!");
       };
+      
+        socket.onerror = (error) => {
+        console.error("❌ WebSocket error:", error);
+        };
 
       socket.onmessage = (event) => {
         console.log("Received in chrome:", event.data);

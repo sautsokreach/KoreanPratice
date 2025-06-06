@@ -4,7 +4,6 @@ const bodyParser = require('body-parser');
 const http = require('http');
 const { Pool } = require('pg');
 const path = require('path');
-const WebSocket = require('ws');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -14,16 +13,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static('public'));
 
-const server = http.createServer(app); // Attach Express to HTTP server
-const wss = new WebSocket.Server({ server }); // Attach WS to the same server
 
-wss.on('connection', (ws) => {
-  console.log('✅ WebSocket client connected');
-  ws.on('message', (message) => {
-    console.log('📨 Received:', message);
-    ws.send(`Echo: ${message}`);
-  });
-});
 // Set up PostgreSQL connection
 const pool = new Pool({
   user: 'ue11ins90aicdo',
@@ -201,6 +191,25 @@ app.post('/api/words', async (req, res) => {
   }
 });
 
+app.post('/api/message', async (req, res) => {
+  const { content } = req.body;
+  
+  if (!content) {
+    return res.status(400).json({ error: 'message are required' });
+  }
+    // Insert the new word
+    const insertResult = await pool.query(
+      'INSERT INTO message (content) VALUES ($1) RETURNING id',
+      [content]
+    );
+    
+    res.status(201).json({
+      id: insertResult.rows[0].id,
+      message: 'message added successfully'
+    });
+
+});
+
 app.post('/api/words/multi', async (req, res) => {
   for(var i=0 ; i < req.body.length; i++){
 
@@ -360,10 +369,39 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'exercise2.html'));
 });
 
+// const WebSocket = require('ws');
+
+// // Attach WebSocket server to existing HTTP server
+// const wss = new WebSocket.Server({ app });
+// // const wss = new WebSocket.Server(server, () => {
+// //   console.log('WebSocket server is listening on ws://localhost:8080');
+// // });
+
+// // Handle new connections
+// wss.on('connection', (ws) => {
+//   console.log('New client connected');
+
+//   // Send a welcome message to the client
+//   ws.send('Welcome to the WebSocket server!');
+
+//   // Handle messages from the client
+//   ws.on('message', (message) => {
+//     console.log(`Received: ${message}`);
+
+//     // Echo the message back to the client
+//     ws.send(`Server received: ${message}`);
+//   });
+
+//   // Handle client disconnection
+//   ws.on('close', () => {
+//     console.log('Client disconnected');
+//   });
+// });
 
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
 
 module.exports = app; // For testing
