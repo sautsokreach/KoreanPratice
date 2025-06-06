@@ -13,7 +13,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static('public'));
 
-const wss = new WebSocket.Server({ port: 8080});
+const wss = new WebSocket.Server({ port: PORT });
 wss.on('connection', (ws) => {
   console.log('Client connected');
   ws.on('message', (message) => {
