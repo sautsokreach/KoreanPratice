@@ -1,6 +1,7 @@
 // app.js - Main application file
 const express = require('express');
 const bodyParser = require('body-parser');
+const http = require('http');
 const { Pool } = require('pg');
 const path = require('path');
 const WebSocket = require('ws');
@@ -13,7 +14,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static('public'));
 
-const wss = new WebSocket.Server({ port: PORT });
+const wss = http.createServer(app);
 wss.on('connection', (ws) => {
   console.log('Client connected');
   ws.on('message', (message) => {
