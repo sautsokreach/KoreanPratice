@@ -3,15 +3,29 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { Pool } = require('pg');
 const path = require('path');
-
+const WebSocket = require('ws');
 const app = express();
 const PORT = process.env.PORT || 3000;
+
 
 // Set up middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static('public'));
 
+const wss = new WebSocket.Server({ port: 8080});
+wss.on('connection', (ws) => {
+  console.log('Client connected');
+  ws.on('message', (message) => {
+    console.log(`Received in server: ${message}`);
+    // Broadcast to all other clients
+    wss.clients.forEach((client) => {
+      if (client !== ws && client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+  });
+});
 // Set up PostgreSQL connection
 const pool = new Pool({
   user: 'ue11ins90aicdo',
@@ -338,6 +352,11 @@ app.get('/exercise3', (req, res) => {
 app.get('/grammar', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'grammar.html'));
 });
+
+app.get('/websocket', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'websocket.html'));
+});
+
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'exercise2.html'));

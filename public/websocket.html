@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <script>
+      const socket = new WebSocket("ws://localhost:8080"); // same server IP
+
+      socket.onopen = () => {
+        console.log("Connected");
+        socket.send("Hello from Chrome!");
+      };
+
+      socket.onmessage = (event) => {
+        console.log("Received in chrome:", event.data);
+      };
+    </script>
+  </body>
+</html>
