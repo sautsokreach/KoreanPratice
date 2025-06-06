@@ -369,8 +369,8 @@ app.get('/grammar', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'grammar.html'));
 });
 
-app.get('/websocket', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'websocket.html'));
+app.get('/message', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'message.html'));
 });
 
 
