@@ -83,6 +83,15 @@ app.get('/api/words', async (req, res) => {
   }
 });
 
+app.get('/api/message', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM message ORDER BY id');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/grammars', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM grammar ORDER BY id');
