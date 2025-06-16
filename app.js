@@ -16,10 +16,10 @@ app.use(express.static('public'));
 
 // Set up PostgreSQL connection
 const pool = new Pool({
-  user: 'ue11ins90aicdo',
-  host: 'cd5gks8n4kb20g.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com',
-  database: 'dd480a9teqdfsp',
-  password: 'p3e8ce02ae0ac7f204852f07cf7e6d50fb9c859f53e57bac6f877b03448b496ae',
+  user: 'GeneraDB_owner',
+  host: 'ep-round-wildflower-a13wh0re-pooler.ap-southeast-1.aws.neon.tech',
+  database: 'GeneraDB',
+  password: 'npg_lgv4zHXep6nu',
   port: 5432,
   ssl: {
     rejectUnauthorized: false,  // For local development or cloud services
