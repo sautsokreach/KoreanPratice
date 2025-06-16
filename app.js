@@ -378,6 +378,8 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'exercise2.html'));
 });
 
+app.use('/.well-known', express.static(path.join(__dirname, '.well-known')));
+
 // const WebSocket = require('ws');
 
 // // Attach WebSocket server to existing HTTP server
